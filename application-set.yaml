@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-addons
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/sanjeevk9/
+      revision: HEAD
+      directories:
+      - path: gitops-argocd/*
+      - path: declarative
+        exclude: true
+      - path: health-check
+        exclude: true
+      - path: helm-chart
+        exclude: true
+      - path: jenkins-demo
+        exclude: true
+      - path: nginx-app
+        exclude: true
+      - path: sealed-secret
+        exclude: true
+      - path: vault-secrets
+        exclude: true
+  template:
+    metadata:
+      name: '{{.path.basename}}'
+    spec:
+      project: "my-project"
+      source:
+        repoURL: https://github.com/sanjeevk9
+        targetRevision: HEAD
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.path.basename}}'
+      syncPolicy:
+        syncOptions:
+        - CreateNamespace=true
